@@ -10,21 +10,23 @@ src/shared/에서 타입과 검증 스키마를 공유한다.
 ## 개발 명령어
 
 ```bash
-npm run dev                              # 개발 서버 (http://localhost:3000)
+npm run dev                              # 개발 서버 (http://localhost:3000, Turbopack)
 npm run build                            # 프로덕션 빌드 (타입 에러 시 실패)
 npm run lint                             # ESLint
 npm run format                           # Prettier
 
 npm test                                 # 전체 테스트
-npm test -- --watch                      # 감시 모드
+npm run test:watch                       # 감시 모드
+npm run test:coverage                    # 커버리지 포함 실행
 npm test -- path/to/file.test.ts         # 단일 파일 실행
 
-npx drizzle-kit push                     # 개발 DB에 스키마 즉시 반영
-npx drizzle-kit generate                 # 마이그레이션 파일 생성
-npx drizzle-kit migrate                  # 프로덕션 마이그레이션 실행
-
-vercel env pull .env.local               # Vercel 환경 변수 로컬 동기화 (초기 설정 필수)
+npm run db:push                          # 개발 DB에 스키마 즉시 반영 (.env.local 자동 로드)
+npm run db:generate                      # 마이그레이션 파일 생성
+npm run db:migrate                       # 프로덕션 마이그레이션 실행
+npm run db:studio                        # Drizzle Studio (DB 브라우저)
 ```
+
+> DB 명령어는 모두 `.env.local`의 `POSTGRES_URL`이 필요하다. 초기 설정 시 `vercel env pull .env.local`로 동기화한다.
 
 ## 프로젝트 구조
 
