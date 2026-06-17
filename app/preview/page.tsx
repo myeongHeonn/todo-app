@@ -6,17 +6,19 @@
 // Phase별로 컴포넌트가 추가되며, 각 섹션은 독립 목 데이터로 렌더링됩니다.
 // Phase 0  ticketApi (런타임 확인 불가, 스킵)
 // Phase 1  Button · Badge · Modal         ← 완료
-// Phase 2  ConfirmDialog · TicketCard · TicketForm  ← ConfirmDialog 완료
-// Phase 3  TicketDetailView · Column · BoardHeader · TicketModal
+// Phase 2  ConfirmDialog · TicketCard · TicketForm  ← 완료
+// Phase 3  TicketDetailView · Column · BoardHeader · TicketModal  ← 완료
 // Phase 4  useTickets (hook, 스킵)
 // Phase 5  Board · BoardContainer
 // ─────────────────────────────────────────────────────────────
 
 import { useState } from 'react';
 import { Button } from '@/client/components/ui/Button';
-import { Badge, PriorityBadge, DueDateBadge } from '@/client/components/ui/Badge';
+import { PriorityBadge, DueDateBadge } from '@/client/components/ui/Badge';
 import { Modal } from '@/client/components/ui/Modal';
 import { ConfirmDialog } from '@/client/components/ConfirmDialog';
+import { TicketForm } from '@/client/components/TicketForm';
+import { TicketModal } from '@/client/components/TicketModal';
 import { Board } from '@/client/components/Board';
 import { Column } from '@/client/components/Column';
 import { TicketCard } from '@/client/components/TicketCard';
@@ -243,7 +245,6 @@ function PhaseSection({
 
   return (
     <section id={id} style={{ marginBottom: '3rem' }}>
-      {/* 섹션 헤더 */}
       <div
         style={{
           display: 'flex',
@@ -406,7 +407,7 @@ function MockDataViewer() {
   );
 }
 
-// ── Phase 1 인터랙션 상태 ─────────────────────────────────────
+// ── Phase 1 ───────────────────────────────────────────────────
 function Phase1Preview() {
   const [isModalOpen, setIsModalOpen] = useState(false);
 
@@ -455,9 +456,12 @@ function Phase1Preview() {
   );
 }
 
+// ── Phase 2 ───────────────────────────────────────────────────
 function Phase2Preview() {
   const [confirmOpen, setConfirmOpen] = useState(false);
   const [lastAction, setLastAction] = useState<string | null>(null);
+  const [isFormOpen, setIsFormOpen] = useState(false);
+  const [lastSubmit, setLastSubmit] = useState<string | null>(null);
 
   return (
     <Grid cols={2}>
@@ -496,10 +500,147 @@ function Phase2Preview() {
         </DndContext>
       </PreviewCard>
 
-      <PreviewCard title="TicketForm" hint="Phase 2 구현 후 추가">
-        <div style={{ color: '#98A2B3', fontSize: 13 }}>구현 완료 후 추가됩니다</div>
+      <PreviewCard title="TicketForm" hint="생성 모드 — '티켓 생성' 클릭">
+        <div style={{ display: 'flex', flexDirection: 'column', gap: '0.75rem', width: '100%' }}>
+          <Button onClick={() => setIsFormOpen(true)}>티켓 생성</Button>
+          {lastSubmit && (
+            <pre
+              style={{
+                margin: 0,
+                padding: '0.75rem',
+                background: '#F9FAFB',
+                borderRadius: 6,
+                fontSize: 12,
+                color: '#344054',
+                overflow: 'auto',
+                maxHeight: 160,
+              }}
+            >
+              {lastSubmit}
+            </pre>
+          )}
+        </div>
+        <Modal isOpen={isFormOpen} onClose={() => setIsFormOpen(false)} title="새 업무">
+          <TicketForm
+            mode="create"
+            onSubmit={(data) => {
+              setLastSubmit(JSON.stringify(data, null, 2));
+              setIsFormOpen(false);
+            }}
+            onCancel={() => setIsFormOpen(false)}
+          />
+        </Modal>
       </PreviewCard>
     </Grid>
+  );
+}
+
+// ── Phase 3 ───────────────────────────────────────────────────
+function Phase3Preview() {
+  const [selectedTicket, setSelectedTicket] = useState<TicketWithMeta | null>(null);
+  const [lastAction, setLastAction] = useState<string | null>(null);
+
+  return (
+    <>
+      <Grid cols={1}>
+        <PreviewCard title="BoardHeader" hint="새 업무 버튼">
+          <div style={{ color: '#98A2B3', fontSize: 13 }}>BoardHeader 구현 후 추가</div>
+        </PreviewCard>
+
+        <PreviewCard
+          title="Column + TicketModal"
+          hint="카드 클릭 → TicketModal 열기 (수정·삭제 가능)"
+          background="#F4F5F7"
+        >
+          <DndContext id="preview-columns">
+            <div style={{ display: 'flex', gap: '1rem', width: '100%', alignItems: 'flex-start' }}>
+              <div style={{ flex: '0 0 280px' }}>
+                <Column
+                  status="BACKLOG"
+                  tickets={MOCK_BOARD.BACKLOG as unknown as TicketWithMeta[]}
+                  onTicketClick={(ticket) => setSelectedTicket(ticket)}
+                />
+              </div>
+              <div style={{ flex: '0 0 280px' }}>
+                <Column
+                  status="TODO"
+                  tickets={MOCK_BOARD.TODO as unknown as TicketWithMeta[]}
+                  onTicketClick={(ticket) => setSelectedTicket(ticket)}
+                />
+              </div>
+            </div>
+          </DndContext>
+          {lastAction && (
+            <div
+              style={{
+                width: '100%',
+                marginTop: '0.25rem',
+                padding: '0.5rem 0.75rem',
+                background: '#EEF1FD',
+                borderRadius: 6,
+                fontSize: 12,
+                color: '#4361EE',
+              }}
+            >
+              {lastAction}
+            </div>
+          )}
+        </PreviewCard>
+      </Grid>
+
+      {selectedTicket !== null && (
+        <TicketModal
+          ticket={selectedTicket}
+          isOpen={true}
+          onClose={() => setSelectedTicket(null)}
+          onUpdate={(id, data) => {
+            setLastAction(`수정 id=${id}: ${JSON.stringify(data)}`);
+            setSelectedTicket(null);
+          }}
+          onDelete={(id) => {
+            setLastAction(`삭제 id=${id}`);
+            setSelectedTicket(null);
+          }}
+        />
+      )}
+    </>
+  );
+}
+
+// ── Phase 5 ───────────────────────────────────────────────────
+function Phase5Preview() {
+  const [selectedTicket, setSelectedTicket] = useState<TicketWithMeta | null>(null);
+
+  return (
+    <>
+      <div
+        style={{
+          height: 560,
+          display: 'flex',
+          flexDirection: 'column',
+          overflow: 'hidden',
+          border: '1px solid #E4E7EC',
+          borderRadius: 10,
+        }}
+      >
+        <Board
+          board={BOARD_DATA}
+          onTicketClick={(ticket) => setSelectedTicket(ticket)}
+          onDragEnd={() => {}}
+          activeTicket={null}
+        />
+      </div>
+
+      {selectedTicket !== null && (
+        <TicketModal
+          ticket={selectedTicket}
+          isOpen={true}
+          onClose={() => setSelectedTicket(null)}
+          onUpdate={() => setSelectedTicket(null)}
+          onDelete={() => setSelectedTicket(null)}
+        />
+      )}
+    </>
   );
 }
 
@@ -519,7 +660,6 @@ export default function PreviewPageRoute() {
 
       <MockDataViewer />
 
-      {/* ── Phase 1: 원자 컴포넌트 ── */}
       <PhaseSection
         id="phase-1"
         phase="Phase 1"
@@ -530,86 +670,34 @@ export default function PreviewPageRoute() {
         <Phase1Preview />
       </PhaseSection>
 
-      {/* ── Phase 2: 분자 컴포넌트 ── */}
       <PhaseSection
         id="phase-2"
         phase="Phase 2"
         title="분자 컴포넌트 — ConfirmDialog · TicketCard · TicketForm"
         description="Phase 1 원자 컴포넌트에 의존. src/client/components/"
-        status="wip"
+        status="done"
       >
         <Phase2Preview />
       </PhaseSection>
 
-      {/* ── Phase 3: 유기체 컴포넌트 ── */}
       <PhaseSection
         id="phase-3"
         phase="Phase 3"
-        title="유기체 컴포넌트 — Column · BoardHeader · TicketModal"
-        description="Phase 1+2 컴포넌트에 의존. Column은 DndContext로 감싸 렌더링."
-        status="wip"
+        title="유기체 컴포넌트 — Column · TicketModal"
+        description="카드 클릭으로 TicketModal 열기. 수정·삭제 액션은 하단 피드백 표시."
+        status="done"
       >
-        <Grid cols={1}>
-          <PreviewCard title="BoardHeader" hint="새 업무 버튼">
-            <div style={{ color: '#98A2B3', fontSize: 13 }}>BoardHeader 구현 후 추가</div>
-          </PreviewCard>
-
-          <PreviewCard
-            title="Column"
-            hint="BACKLOG (2) · TODO (3, 하나 overdue)"
-            background="#F4F5F7"
-          >
-            <DndContext id="preview-columns">
-              <div style={{ display: 'flex', gap: '1rem', width: '100%', alignItems: 'flex-start' }}>
-                <div style={{ flex: '0 0 280px' }}>
-                  <Column
-                    status="BACKLOG"
-                    tickets={MOCK_BOARD.BACKLOG as unknown as TicketWithMeta[]}
-                    onTicketClick={() => {}}
-                  />
-                </div>
-                <div style={{ flex: '0 0 280px' }}>
-                  <Column
-                    status="TODO"
-                    tickets={MOCK_BOARD.TODO as unknown as TicketWithMeta[]}
-                    onTicketClick={() => {}}
-                  />
-                </div>
-              </div>
-            </DndContext>
-          </PreviewCard>
-
-          <PreviewCard title="TicketModal" hint="상세보기 · 수정 · 삭제" background="#F4F5F7">
-            <div style={{ color: '#98A2B3', fontSize: 13 }}>TicketModal 구현 후 추가</div>
-          </PreviewCard>
-        </Grid>
+        <Phase3Preview />
       </PhaseSection>
 
-      {/* ── Phase 5: 풀 보드 ── */}
       <PhaseSection
         id="phase-5"
         phase="Phase 5"
         title="풀 보드 — Board (목 데이터, DnD 활성)"
-        description="Board 컴포넌트 전체. BACKLOG 2개·TODO 3개·IN_PROGRESS 1개·DONE 1개. 드래그 시 레이아웃 확인."
+        description="Board 컴포넌트 전체. BACKLOG 2개·TODO 3개·IN_PROGRESS 1개·DONE 1개. 드래그 및 카드 클릭으로 TicketModal 열기."
         status="wip"
       >
-        <div
-          style={{
-            height: 560,
-            display: 'flex',
-            flexDirection: 'column',
-            overflow: 'hidden',
-            border: '1px solid #E4E7EC',
-            borderRadius: 10,
-          }}
-        >
-          <Board
-            board={BOARD_DATA}
-            onTicketClick={() => {}}
-            onDragEnd={() => {}}
-            activeTicket={null}
-          />
-        </div>
+        <Phase5Preview />
       </PhaseSection>
 
     </PreviewPage>
