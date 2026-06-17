@@ -1,5 +1,12 @@
 import { useState, useEffect, useCallback } from 'react';
-import * as ticketApi from '../api/ticketApi';
+import {
+  getBoard,
+  create as apiCreate,
+  update as apiUpdate,
+  remove as apiRemove,
+  reorder as apiReorder,
+  complete as apiComplete,
+} from '../api/ticketApi';
 import { COLUMN_ORDER } from '@/shared/types';
 import type {
   BoardData,
@@ -50,7 +57,19 @@ function applyMove(
 
   if (!moved) return board;
 
-  const updated: TicketWithMeta = { ...moved, status: newStatus, position: newPosition };
+  const now = new Date();
+  const today = new Date();
+  today.setHours(0, 0, 0, 0);
+
+  const updated: TicketWithMeta = {
+    ...moved,
+    status: newStatus,
+    position: newPosition,
+    startedAt: newStatus === 'TODO' ? now : newStatus === 'BACKLOG' ? null : moved.startedAt,
+    completedAt: newStatus === 'DONE' ? now : moved.status === 'DONE' ? null : moved.completedAt,
+    isOverdue: newStatus !== 'DONE' && moved.dueDate !== null && new Date(moved.dueDate) < today,
+  };
+
   const targetCol = [...stripped[newStatus], updated].sort((a, b) => a.position - b.position);
 
   return { ...stripped, [newStatus]: targetCol };
@@ -62,7 +81,7 @@ export function useTickets({ initialData }: UseTicketsOptions): UseTicketsResult
   const [error, setError] = useState<string | null>(null);
 
   const refreshBoard = useCallback(async () => {
-    const data = await ticketApi.getBoard();
+    const data = await getBoard();
     setBoard(data);
   }, []);
 
@@ -73,6 +92,7 @@ export function useTickets({ initialData }: UseTicketsOptions): UseTicketsResult
 
   async function withLoading(fn: () => Promise<void>) {
     setIsLoading(true);
+    setError(null);
     try {
       await fn();
     } catch (e) {
@@ -84,25 +104,26 @@ export function useTickets({ initialData }: UseTicketsOptions): UseTicketsResult
 
   const create = (input: CreateTicketInput) =>
     withLoading(async () => {
-      await ticketApi.create(input);
+      await apiCreate(input);
       await refreshBoard();
     });
 
   const update = (id: number, input: UpdateTicketInput) =>
     withLoading(async () => {
-      await ticketApi.update(id, input);
+      await apiUpdate(id, input);
       await refreshBoard();
     });
 
   const remove = (id: number) =>
     withLoading(async () => {
-      await ticketApi.remove(id);
+      await apiRemove(id);
       await refreshBoard();
     });
 
   async function withOptimistic(optimisticBoard: BoardData, fn: () => Promise<void>) {
     const backup = board!;
     setBoard(optimisticBoard);
+    setError(null);
     try {
       await fn();
       await refreshBoard();
@@ -116,7 +137,7 @@ export function useTickets({ initialData }: UseTicketsOptions): UseTicketsResult
     if (!board) return Promise.resolve();
     return withOptimistic(
       applyMove(board, input.ticketId, input.status, input.position),
-      async () => { await ticketApi.reorder(input); },
+      async () => { await apiReorder(input); },
     );
   };
 
@@ -124,7 +145,7 @@ export function useTickets({ initialData }: UseTicketsOptions): UseTicketsResult
     if (!board) return Promise.resolve();
     return withOptimistic(
       applyMove(board, id, input.status, input.position),
-      async () => { await ticketApi.complete(id, input); },
+      async () => { await apiComplete(id, input); },
     );
   };
 
