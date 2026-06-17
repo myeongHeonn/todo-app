@@ -1,5 +1,6 @@
 'use client';
 
+import { memo } from 'react';
 import { useSortable } from '@dnd-kit/sortable';
 import { CSS } from '@dnd-kit/utilities';
 import type { TicketWithMeta } from '@/shared/types';
@@ -7,10 +8,10 @@ import { PriorityBadge, DueDateBadge } from './ui/Badge';
 
 interface TicketCardProps {
   ticket: TicketWithMeta;
-  onClick: () => void;
+  onClick: (ticket: TicketWithMeta) => void;
 }
 
-export function TicketCard({ ticket, onClick }: TicketCardProps) {
+export const TicketCard = memo(function TicketCard({ ticket, onClick }: TicketCardProps) {
   const { attributes, listeners, setNodeRef, transform, transition, isDragging } = useSortable({
     id: ticket.id,
   });
@@ -38,9 +39,9 @@ export function TicketCard({ ticket, onClick }: TicketCardProps) {
     .join(', ');
 
   const handleKeyDown = (e: React.KeyboardEvent) => {
-    if (e.key === 'Enter') {
+    if (e.key === 'Enter' || e.key === ' ') {
       e.preventDefault();
-      onClick();
+      onClick(ticket);
     }
   };
 
@@ -55,10 +56,10 @@ export function TicketCard({ ticket, onClick }: TicketCardProps) {
       aria-label={ariaLabel}
       tabIndex={0}
       data-overdue={ticket.isOverdue ? 'true' : undefined}
-      onClick={onClick}
+      onClick={() => onClick(ticket)}
       onKeyDown={handleKeyDown}
     >
-      <p className="ticket-card__title truncate" data-testid="ticket-title">
+      <p className="ticket-card__title" data-testid="ticket-title">
         {ticket.title}
       </p>
       <div className="ticket-card__meta">
@@ -71,4 +72,4 @@ export function TicketCard({ ticket, onClick }: TicketCardProps) {
       </div>
     </div>
   );
-}
+});

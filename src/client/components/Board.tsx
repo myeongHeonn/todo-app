@@ -66,7 +66,11 @@ export function Board({
         </div>
       </div>
       <DragOverlay>
-        {activeTicket && <TicketCard ticket={activeTicket} onClick={() => {}} />}
+        {activeTicket && (
+          <div aria-hidden="true">
+            <TicketCard ticket={activeTicket} onClick={() => {}} />
+          </div>
+        )}
       </DragOverlay>
     </DndContext>
   );

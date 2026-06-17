@@ -12,8 +12,8 @@ jest.mock('@dnd-kit/sortable', () => ({
 }));
 
 jest.mock('./TicketCard', () => ({
-  TicketCard: ({ ticket, onClick }: { ticket: TicketWithMeta; onClick: () => void }) => (
-    <div data-testid="ticket-card" data-id={ticket.id} onClick={onClick}>
+  TicketCard: ({ ticket, onClick }: { ticket: TicketWithMeta; onClick: (ticket: TicketWithMeta) => void }) => (
+    <div data-testid="ticket-card" data-id={ticket.id} onClick={() => onClick(ticket)}>
       {ticket.title}
     </div>
   ),

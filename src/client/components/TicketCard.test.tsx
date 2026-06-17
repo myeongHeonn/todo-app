@@ -106,10 +106,10 @@ describe('TicketCard', () => {
   });
 
   describe('C001-6: 긴 제목 말줄임', () => {
-    it('제목 요소에 말줄임 클래스가 적용된다', () => {
+    it('제목 요소에 말줄임 스타일 클래스가 적용된다', () => {
       const ticket: TicketWithMeta = { ...baseTicket, title: 'a'.repeat(200) };
       render(<TicketCard ticket={ticket} onClick={jest.fn()} />);
-      expect(screen.getByTestId('ticket-title')).toHaveClass('truncate');
+      expect(screen.getByTestId('ticket-title')).toHaveClass('ticket-card__title');
     });
   });
 

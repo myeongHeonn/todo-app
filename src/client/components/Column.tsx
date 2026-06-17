@@ -6,6 +6,13 @@ import type { TicketStatus, TicketWithMeta } from '@/shared/types';
 import { ColumnHeader } from './ColumnHeader';
 import { TicketCard } from './TicketCard';
 
+const STATUS_CLASS: Record<TicketStatus, string> = {
+  BACKLOG: 'column--backlog',
+  TODO: 'column--todo',
+  IN_PROGRESS: 'column--inprogress',
+  DONE: 'column--done',
+};
+
 interface ColumnProps {
   status: TicketStatus;
   tickets: TicketWithMeta[];
@@ -13,13 +20,6 @@ interface ColumnProps {
 }
 
 export function Column({ status, tickets, onTicketClick }: ColumnProps) {
-  const STATUS_CLASS: Record<TicketStatus, string> = {
-    BACKLOG: 'column--backlog',
-    TODO: 'column--todo',
-    IN_PROGRESS: 'column--inprogress',
-    DONE: 'column--done',
-  };
-
   const { setNodeRef, isOver } = useDroppable({ id: status });
 
   return (
@@ -37,7 +37,7 @@ export function Column({ status, tickets, onTicketClick }: ColumnProps) {
               <TicketCard
                 key={ticket.id}
                 ticket={ticket}
-                onClick={() => onTicketClick(ticket)}
+                onClick={onTicketClick}
               />
             ))
           )}
