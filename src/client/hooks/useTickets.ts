@@ -116,7 +116,7 @@ export function useTickets({ initialData }: UseTicketsOptions): UseTicketsResult
     if (!board) return Promise.resolve();
     return withOptimistic(
       applyMove(board, input.ticketId, input.status, input.position),
-      () => ticketApi.reorder(input),
+      async () => { await ticketApi.reorder(input); },
     );
   };
 
@@ -124,7 +124,7 @@ export function useTickets({ initialData }: UseTicketsOptions): UseTicketsResult
     if (!board) return Promise.resolve();
     return withOptimistic(
       applyMove(board, id, input.status, input.position),
-      () => ticketApi.complete(id, input),
+      async () => { await ticketApi.complete(id, input); },
     );
   };
 

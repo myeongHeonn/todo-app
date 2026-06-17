@@ -16,6 +16,7 @@ import { BoardHeader } from './BoardHeader';
 import { TicketModal } from './TicketModal';
 import { TicketForm } from './TicketForm';
 import { Modal } from './ui/Modal';
+import { type FilterType } from './FilterBar';
 
 interface BoardContainerProps {
   initialData: BoardData;
@@ -43,12 +44,10 @@ function calcDropPosition(
 
   if (col.length === 0) return 0;
 
-  // overId가 칼럼 status(string)이면 맨 뒤에 삽입
   if (typeof overId !== 'number') {
     return col[col.length - 1].position + 1024;
   }
 
-  // overId가 티켓 ID → 그 티켓 바로 앞에 삽입
   const overIdx = col.findIndex((t) => t.id === overId);
   if (overIdx === -1) return col[col.length - 1].position + 1024;
 
@@ -63,6 +62,25 @@ function calcDropPosition(
   return Math.floor((prev.position + next.position) / 2);
 }
 
+function isThisWeek(dateStr: string): boolean {
+  const date = new Date(dateStr);
+  const now = new Date();
+  const dayOfWeek = now.getDay();
+  const monday = new Date(now);
+  monday.setDate(now.getDate() - (dayOfWeek === 0 ? 6 : dayOfWeek - 1));
+  monday.setHours(0, 0, 0, 0);
+  const sunday = new Date(monday);
+  sunday.setDate(monday.getDate() + 6);
+  sunday.setHours(23, 59, 59, 999);
+  return date >= monday && date <= sunday;
+}
+
+function filterTickets(tickets: TicketWithMeta[], filter: FilterType): TicketWithMeta[] {
+  if (filter === 'this-week') return tickets.filter((t) => t.dueDate != null && isThisWeek(t.dueDate));
+  if (filter === 'overdue') return tickets.filter((t) => t.isOverdue);
+  return tickets;
+}
+
 export function BoardContainer({ initialData }: BoardContainerProps) {
   const { board, isLoading, create, update, remove, reorder, complete } = useTickets({
     initialData,
@@ -70,8 +88,20 @@ export function BoardContainer({ initialData }: BoardContainerProps) {
   const [activeTicket, setActiveTicket] = useState<TicketWithMeta | null>(null);
   const [selectedTicket, setSelectedTicket] = useState<TicketWithMeta | null>(null);
   const [isCreating, setIsCreating] = useState(false);
+  const [activeFilter, setActiveFilter] = useState<FilterType>('all');
 
   const currentBoard = board ?? initialData;
+
+  const activeTickets = [...currentBoard.TODO, ...currentBoard.IN_PROGRESS];
+  const thisWeekCount = activeTickets.filter((t) => t.dueDate != null && isThisWeek(t.dueDate)).length;
+  const overdueCount = activeTickets.filter((t) => t.isOverdue).length;
+
+  const filteredBoard: BoardData = {
+    BACKLOG: currentBoard.BACKLOG,
+    TODO: filterTickets(currentBoard.TODO, activeFilter),
+    IN_PROGRESS: filterTickets(currentBoard.IN_PROGRESS, activeFilter),
+    DONE: filterTickets(currentBoard.DONE, activeFilter),
+  };
 
   function handleDragStart(event: DragStartEvent) {
     const id = event.active.id as number;
@@ -102,11 +132,15 @@ export function BoardContainer({ initialData }: BoardContainerProps) {
     <div className="board-container">
       <BoardHeader onCreateClick={() => setIsCreating(true)} />
       <Board
-        board={currentBoard}
+        board={filteredBoard}
         onTicketClick={setSelectedTicket}
         onDragStart={handleDragStart}
         onDragEnd={handleDragEnd}
         activeTicket={activeTicket}
+        activeFilter={activeFilter}
+        thisWeekCount={thisWeekCount}
+        overdueCount={overdueCount}
+        onFilterChange={setActiveFilter}
       />
       {selectedTicket && (
         <TicketModal

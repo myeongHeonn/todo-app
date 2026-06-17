@@ -71,6 +71,19 @@ src/
 - 컴포넌트 명세: /docs/COMPONENT_SPEC.md
 - 테스트 케이스: /docs/TEST_CASES.md
 
+## 디자인 시스템
+스타일링 작업 시 반드시 아래 파일들을 참조할 것:
+
+- 디자인 시스템 전체 명세: /docs/DESIGN_SYSTEM.md
+- 색상 토큰: /src/shared/design/colors.json
+
+### 참조 규칙
+- 컴포넌트에 색상을 적용할 때는 `colors.json`의 시멘틱 토큰(`semantic`, `status`, `priority`, `state`)을 기준으로 결정한다. 팔레트 원시값 직접 사용 금지
+- 칸반 칼럼·상태 배지의 색상은 `status.{backlog|todo|inProgress|done}` 토큰만 사용한다
+- 우선순위 배지 색상은 `priority.{urgent|high|medium|low}` 토큰만 사용한다
+- 기한 초과(`isOverdue`) 표시는 `state.overdue` 토큰을 사용한다
+- 새 컴포넌트 스타일링 전 DESIGN_SYSTEM.md의 "컴포넌트별 토큰 적용 가이드" 섹션을 먼저 확인한다
+
 ## 핵심 아키텍처 결정사항
 
 ### 계층 경계 (절대 규칙)

@@ -13,10 +13,17 @@ interface ColumnProps {
 }
 
 export function Column({ status, tickets, onTicketClick }: ColumnProps) {
+  const STATUS_CLASS: Record<TicketStatus, string> = {
+    BACKLOG: 'column--backlog',
+    TODO: 'column--todo',
+    IN_PROGRESS: 'column--inprogress',
+    DONE: 'column--done',
+  };
+
   const { setNodeRef, isOver } = useDroppable({ id: status });
 
   return (
-    <div className={`column${isOver ? ' column--over' : ''}`}>
+    <div className={['column', STATUS_CLASS[status], isOver && 'column--over'].filter(Boolean).join(' ')}>
       <ColumnHeader status={status} count={tickets.length} />
       <SortableContext
         items={tickets.map((t) => t.id)}
