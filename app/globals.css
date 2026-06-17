@@ -184,6 +184,12 @@ main {
   flex-shrink: 0;
 }
 
+.board-sidebar .column {
+  min-width: 0;
+  max-width: none;
+  width: 100%;
+}
+
 .board-sidebar-inner {
   flex: 1;
   overflow-y: auto;
