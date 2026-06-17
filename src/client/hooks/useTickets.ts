@@ -100,30 +100,32 @@ export function useTickets({ initialData }: UseTicketsOptions): UseTicketsResult
       await refreshBoard();
     });
 
-  const reorder = async (input: ReorderTicketInput) => {
-    if (!board) return;
-    const backup = board;
-    setBoard(applyMove(board, input.ticketId, input.status, input.position));
+  async function withOptimistic(optimisticBoard: BoardData, fn: () => Promise<void>) {
+    const backup = board!;
+    setBoard(optimisticBoard);
     try {
-      await ticketApi.reorder(input);
+      await fn();
       await refreshBoard();
     } catch (e) {
       setBoard(backup);
       setError(e instanceof Error ? e.message : String(e));
     }
+  }
+
+  const reorder = (input: ReorderTicketInput) => {
+    if (!board) return Promise.resolve();
+    return withOptimistic(
+      applyMove(board, input.ticketId, input.status, input.position),
+      () => ticketApi.reorder(input),
+    );
   };
 
-  const complete = async (id: number, input: { status: TicketStatus; position: number }) => {
-    if (!board) return;
-    const backup = board;
-    setBoard(applyMove(board, id, input.status, input.position));
-    try {
-      await ticketApi.complete(id, input);
-      await refreshBoard();
-    } catch (e) {
-      setBoard(backup);
-      setError(e instanceof Error ? e.message : String(e));
-    }
+  const complete = (id: number, input: { status: TicketStatus; position: number }) => {
+    if (!board) return Promise.resolve();
+    return withOptimistic(
+      applyMove(board, id, input.status, input.position),
+      () => ticketApi.complete(id, input),
+    );
   };
 
   return { board, isLoading, error, create, update, remove, reorder, complete };

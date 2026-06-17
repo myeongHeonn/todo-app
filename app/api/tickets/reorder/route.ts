@@ -17,12 +17,10 @@ export async function PATCH(req: NextRequest) {
   try {
     const ticket = await reorderTicket(result.data);
     return NextResponse.json(ticket);
-  } catch (e) {
-    const message = e instanceof Error ? e.message : '서버 오류가 발생했습니다';
-    const isNotFound = message === '티켓을 찾을 수 없습니다';
+  } catch {
     return NextResponse.json(
-      { error: { code: isNotFound ? 'NOT_FOUND' : 'INTERNAL_ERROR', message } },
-      { status: isNotFound ? 404 : 500 },
+      { error: { code: 'NOT_FOUND', message: '티켓을 찾을 수 없습니다' } },
+      { status: 404 },
     );
   }
 }

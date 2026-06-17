@@ -2,13 +2,13 @@
 
 import { useState } from 'react';
 import type { DragStartEvent, DragEndEvent } from '@dnd-kit/core';
-import { COLUMN_ORDER } from '@/shared/types';
-import type {
-  BoardData,
-  TicketStatus,
-  TicketWithMeta,
-  ReorderableStatus,
-  CreateTicketInput,
+import {
+  COLUMN_ORDER,
+  type BoardData,
+  type TicketStatus,
+  type TicketWithMeta,
+  type ReorderableStatus,
+  type CreateTicketInput,
 } from '@/shared/types';
 import { useTickets } from '../hooks/useTickets';
 import { Board } from './Board';
@@ -75,13 +75,8 @@ export function BoardContainer({ initialData }: BoardContainerProps) {
 
   function handleDragStart(event: DragStartEvent) {
     const id = event.active.id as number;
-    for (const status of COLUMN_ORDER) {
-      const found = currentBoard[status].find((t) => t.id === id);
-      if (found) {
-        setActiveTicket(found);
-        return;
-      }
-    }
+    const ticket = COLUMN_ORDER.flatMap((s) => currentBoard[s]).find((t) => t.id === id) ?? null;
+    setActiveTicket(ticket);
   }
 
   function handleDragEnd(event: DragEndEvent) {
