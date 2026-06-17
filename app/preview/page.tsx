@@ -5,12 +5,18 @@
 //
 // Phase별로 컴포넌트가 추가되며, 각 섹션은 독립 목 데이터로 렌더링됩니다.
 // Phase 0  ticketApi (런타임 확인 불가, 스킵)
-// Phase 1  Button · Badge · Modal
-// Phase 2  ConfirmDialog · TicketCard · TicketForm
+// Phase 1  Button · Badge · Modal         ← 완료
+// Phase 2  ConfirmDialog · TicketCard · TicketForm  ← ConfirmDialog 완료
 // Phase 3  TicketDetailView · Column · BoardHeader · TicketModal
 // Phase 4  useTickets (hook, 스킵)
 // Phase 5  Board · BoardContainer
 // ─────────────────────────────────────────────────────────────
+
+import { useState } from 'react';
+import { Button } from '@/client/components/ui/Button';
+import { Badge, PriorityBadge, DueDateBadge } from '@/client/components/ui/Badge';
+import { Modal } from '@/client/components/ui/Modal';
+import { ConfirmDialog } from '@/client/components/ConfirmDialog';
 
 // ── 타입 정의 (공유 타입이 생기면 @/shared/types에서 import) ──────
 type TicketStatus = 'BACKLOG' | 'TODO' | 'IN_PROGRESS' | 'DONE';
@@ -362,6 +368,86 @@ function MockDataViewer() {
   );
 }
 
+// ── Phase 1 인터랙션 상태 ─────────────────────────────────────
+function Phase1Preview() {
+  const [isModalOpen, setIsModalOpen] = useState(false);
+
+  return (
+    <Grid cols={2}>
+      <PreviewCard title="Button" hint="네 가지 variant">
+        <div style={{ display: 'flex', gap: '0.5rem', flexWrap: 'wrap' }}>
+          <Button variant="primary">Primary</Button>
+          <Button variant="secondary">Secondary</Button>
+          <Button variant="danger">Danger</Button>
+          <Button variant="ghost">Ghost</Button>
+        </div>
+      </PreviewCard>
+
+      <PreviewCard title="Button (isLoading)" hint="처리 중 상태">
+        <Button isLoading>저장</Button>
+        <Button variant="danger" isLoading>삭제</Button>
+      </PreviewCard>
+
+      <PreviewCard title="Modal" hint="버튼 클릭으로 열기 / ESC · 오버레이 클릭으로 닫기" background="#F4F5F7">
+        <Button onClick={() => setIsModalOpen(true)}>모달 열기</Button>
+        <Modal isOpen={isModalOpen} onClose={() => setIsModalOpen(false)} title="예시 모달">
+          <p style={{ margin: '0 0 1rem', color: '#344054' }}>
+            ESC 키 또는 바깥 클릭으로 닫을 수 있습니다.
+          </p>
+          <Button variant="secondary" onClick={() => setIsModalOpen(false)}>닫기</Button>
+        </Modal>
+      </PreviewCard>
+
+      <PreviewCard title="Badge" hint="priority · overdue · date">
+        <div style={{ display: 'flex', flexDirection: 'column', gap: '0.75rem' }}>
+          <div style={{ display: 'flex', gap: '0.5rem', alignItems: 'center' }}>
+            <span style={{ fontSize: 12, color: '#667085', width: 70 }}>Priority</span>
+            <PriorityBadge priority="LOW" />
+            <PriorityBadge priority="MEDIUM" />
+            <PriorityBadge priority="HIGH" />
+          </div>
+          <div style={{ display: 'flex', gap: '0.5rem', alignItems: 'center' }}>
+            <span style={{ fontSize: 12, color: '#667085', width: 70 }}>DueDate</span>
+            <DueDateBadge date="2026-12-31" isOverdue={false} />
+            <DueDateBadge date="2026-01-01" isOverdue={true} />
+          </div>
+        </div>
+      </PreviewCard>
+    </Grid>
+  );
+}
+
+function Phase2Preview() {
+  const [confirmOpen, setConfirmOpen] = useState(false);
+  const [lastAction, setLastAction] = useState<string | null>(null);
+
+  return (
+    <Grid cols={2}>
+      <PreviewCard title="ConfirmDialog" hint="버튼 클릭으로 열기">
+        <div style={{ display: 'flex', flexDirection: 'column', gap: '0.75rem', width: '100%' }}>
+          <Button variant="danger" onClick={() => setConfirmOpen(true)}>삭제</Button>
+          {lastAction && (
+            <span style={{ fontSize: 13, color: '#667085' }}>마지막 액션: {lastAction}</span>
+          )}
+          <ConfirmDialog
+            isOpen={confirmOpen}
+            onConfirm={() => { setLastAction('확인 (삭제)'); setConfirmOpen(false); }}
+            onCancel={() => { setLastAction('취소'); setConfirmOpen(false); }}
+          />
+        </div>
+      </PreviewCard>
+
+      <PreviewCard title="TicketCard" hint="Phase 2 구현 후 추가" background="#F4F5F7">
+        <div style={{ color: '#98A2B3', fontSize: 13 }}>구현 완료 후 추가됩니다</div>
+      </PreviewCard>
+
+      <PreviewCard title="TicketForm" hint="Phase 2 구현 후 추가">
+        <div style={{ color: '#98A2B3', fontSize: 13 }}>구현 완료 후 추가됩니다</div>
+      </PreviewCard>
+    </Grid>
+  );
+}
+
 // ── 메인 페이지 ──────────────────────────────────────────────
 export default function PreviewPageRoute() {
   return (
@@ -384,24 +470,9 @@ export default function PreviewPageRoute() {
         phase="Phase 1"
         title="원자 컴포넌트 — Button · Badge · Modal"
         description="외부 프로젝트 의존 없는 최소 단위 컴포넌트. src/client/components/ui/"
-        status="pending"
+        status="done"
       >
-        <Grid cols={2}>
-          <PreviewCard title="Button" hint="variant × size">
-            {/* Phase 1 완료 후 Button 컴포넌트 추가 */}
-            <div style={{ color: '#98A2B3', fontSize: 13 }}>Button 구현 후 추가</div>
-          </PreviewCard>
-
-          <PreviewCard title="Badge" hint="priority · overdue · date">
-            {/* Phase 1 완료 후 Badge 컴포넌트 추가 */}
-            <div style={{ color: '#98A2B3', fontSize: 13 }}>Badge 구현 후 추가</div>
-          </PreviewCard>
-
-          <PreviewCard title="Modal" hint="ESC · 오버레이 클릭 닫기" background="#F4F5F7">
-            {/* Phase 1 완료 후 Modal 컴포넌트 추가 */}
-            <div style={{ color: '#98A2B3', fontSize: 13 }}>Modal 구현 후 추가</div>
-          </PreviewCard>
-        </Grid>
+        <Phase1Preview />
       </PhaseSection>
 
       {/* ── Phase 2: 분자 컴포넌트 ── */}
@@ -410,24 +481,9 @@ export default function PreviewPageRoute() {
         phase="Phase 2"
         title="분자 컴포넌트 — ConfirmDialog · TicketCard · TicketForm"
         description="Phase 1 원자 컴포넌트에 의존. src/client/components/"
-        status="pending"
+        status="wip"
       >
-        <Grid cols={2}>
-          <PreviewCard title="TicketCard" hint="5가지 변형 (정상·오버듀·완료·긴제목·날짜없음)" background="#F4F5F7">
-            {/* Phase 2 완료 후 TicketCard 컴포넌트 추가 */}
-            <div style={{ color: '#98A2B3', fontSize: 13 }}>TicketCard 구현 후 추가</div>
-          </PreviewCard>
-
-          <PreviewCard title="TicketForm" hint="생성 모드 · 수정 모드 · 에러 상태">
-            {/* Phase 2 완료 후 TicketForm 컴포넌트 추가 */}
-            <div style={{ color: '#98A2B3', fontSize: 13 }}>TicketForm 구현 후 추가</div>
-          </PreviewCard>
-
-          <PreviewCard title="ConfirmDialog" hint="삭제 확인 다이얼로그">
-            {/* Phase 2 완료 후 ConfirmDialog 컴포넌트 추가 */}
-            <div style={{ color: '#98A2B3', fontSize: 13 }}>ConfirmDialog 구현 후 추가</div>
-          </PreviewCard>
-        </Grid>
+        <Phase2Preview />
       </PhaseSection>
 
       {/* ── Phase 3: 유기체 컴포넌트 ── */}
