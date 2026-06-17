@@ -17,6 +17,12 @@ import { Button } from '@/client/components/ui/Button';
 import { Badge, PriorityBadge, DueDateBadge } from '@/client/components/ui/Badge';
 import { Modal } from '@/client/components/ui/Modal';
 import { ConfirmDialog } from '@/client/components/ConfirmDialog';
+import { Board } from '@/client/components/Board';
+import { Column } from '@/client/components/Column';
+import { TicketCard } from '@/client/components/TicketCard';
+import { DndContext } from '@dnd-kit/core';
+import { SortableContext } from '@dnd-kit/sortable';
+import type { TicketWithMeta, BoardData } from '@/shared/types';
 
 // ── 타입 정의 (공유 타입이 생기면 @/shared/types에서 import) ──────
 type TicketStatus = 'BACKLOG' | 'TODO' | 'IN_PROGRESS' | 'DONE';
@@ -115,14 +121,46 @@ const MOCK_TICKETS: MockTicket[] = [
     updatedAt: '2026-06-05T08:00:00Z',
     isOverdue: false,
   },
+  {
+    id: 6,
+    title: '긴급 기능 — 결제 모듈 오류 수정',
+    description: '프로덕션에서 결제 실패 케이스가 발생하고 있습니다.',
+    status: 'BACKLOG',
+    priority: 'HIGH',
+    position: -1024,
+    plannedStartDate: null,
+    dueDate: '2026-06-25',
+    startedAt: null,
+    completedAt: null,
+    createdAt: '2026-06-15T08:00:00Z',
+    updatedAt: '2026-06-15T08:00:00Z',
+    isOverdue: false,
+  },
+  {
+    id: 7,
+    title: 'API 문서 업데이트 — 마감일 지남',
+    description: null,
+    status: 'TODO',
+    priority: 'MEDIUM',
+    position: -512,
+    plannedStartDate: null,
+    dueDate: '2026-05-15',
+    startedAt: null,
+    completedAt: null,
+    createdAt: '2026-05-01T08:00:00Z',
+    updatedAt: '2026-05-01T08:00:00Z',
+    isOverdue: true,
+  },
 ];
 
 const MOCK_BOARD = {
-  BACKLOG: [MOCK_TICKETS[2]],
-  TODO: [MOCK_TICKETS[0], MOCK_TICKETS[4]],
-  IN_PROGRESS: [MOCK_TICKETS[1]],
-  DONE: [MOCK_TICKETS[3]],
+  BACKLOG: [MOCK_TICKETS[2], MOCK_TICKETS[5]],        // LOW + HIGH = 2
+  TODO: [MOCK_TICKETS[0], MOCK_TICKETS[4], MOCK_TICKETS[6]], // HIGH + LOW + isOverdue = 3
+  IN_PROGRESS: [MOCK_TICKETS[1]],                     // 1
+  DONE: [MOCK_TICKETS[3]],                            // 1
 };
+
+const BOARD_DATA = MOCK_BOARD as unknown as BoardData;
 
 // ── 프리뷰 레이아웃 헬퍼 ─────────────────────────────────────
 function PreviewPage({ children }: { children: React.ReactNode }) {
@@ -437,8 +475,25 @@ function Phase2Preview() {
         </div>
       </PreviewCard>
 
-      <PreviewCard title="TicketCard" hint="Phase 2 구현 후 추가" background="#F4F5F7">
-        <div style={{ color: '#98A2B3', fontSize: 13 }}>구현 완료 후 추가됩니다</div>
+      <PreviewCard title="TicketCard" hint="일반 · isOverdue · DONE 세 가지 상태" background="#F4F5F7">
+        <DndContext id="preview-ticket-cards">
+          <SortableContext items={[MOCK_TICKETS[0].id, MOCK_TICKETS[6].id, MOCK_TICKETS[3].id]}>
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '0.5rem', width: '100%' }}>
+              <TicketCard
+                ticket={MOCK_TICKETS[0] as unknown as TicketWithMeta}
+                onClick={() => {}}
+              />
+              <TicketCard
+                ticket={MOCK_TICKETS[6] as unknown as TicketWithMeta}
+                onClick={() => {}}
+              />
+              <TicketCard
+                ticket={MOCK_TICKETS[3] as unknown as TicketWithMeta}
+                onClick={() => {}}
+              />
+            </div>
+          </SortableContext>
+        </DndContext>
       </PreviewCard>
 
       <PreviewCard title="TicketForm" hint="Phase 2 구현 후 추가">
@@ -491,26 +546,40 @@ export default function PreviewPageRoute() {
         id="phase-3"
         phase="Phase 3"
         title="유기체 컴포넌트 — Column · BoardHeader · TicketModal"
-        description="Phase 1+2 컴포넌트에 의존. DnD 없이 정적 렌더링으로 확인."
-        status="pending"
+        description="Phase 1+2 컴포넌트에 의존. Column은 DndContext로 감싸 렌더링."
+        status="wip"
       >
         <Grid cols={1}>
           <PreviewCard title="BoardHeader" hint="새 업무 버튼">
-            {/* Phase 3 완료 후 BoardHeader 컴포넌트 추가 */}
             <div style={{ color: '#98A2B3', fontSize: 13 }}>BoardHeader 구현 후 추가</div>
           </PreviewCard>
 
           <PreviewCard
             title="Column"
-            hint="4가지 상태 (BACKLOG · TODO · IN_PROGRESS · DONE)"
+            hint="BACKLOG (2) · TODO (3, 하나 overdue)"
             background="#F4F5F7"
           >
-            {/* Phase 3 완료 후 Column 컴포넌트 추가 */}
-            <div style={{ color: '#98A2B3', fontSize: 13 }}>Column 구현 후 추가</div>
+            <DndContext id="preview-columns">
+              <div style={{ display: 'flex', gap: '1rem', width: '100%', alignItems: 'flex-start' }}>
+                <div style={{ flex: '0 0 280px' }}>
+                  <Column
+                    status="BACKLOG"
+                    tickets={MOCK_BOARD.BACKLOG as unknown as TicketWithMeta[]}
+                    onTicketClick={() => {}}
+                  />
+                </div>
+                <div style={{ flex: '0 0 280px' }}>
+                  <Column
+                    status="TODO"
+                    tickets={MOCK_BOARD.TODO as unknown as TicketWithMeta[]}
+                    onTicketClick={() => {}}
+                  />
+                </div>
+              </div>
+            </DndContext>
           </PreviewCard>
 
           <PreviewCard title="TicketModal" hint="상세보기 · 수정 · 삭제" background="#F4F5F7">
-            {/* Phase 3 완료 후 TicketModal 컴포넌트 추가 */}
             <div style={{ color: '#98A2B3', fontSize: 13 }}>TicketModal 구현 후 추가</div>
           </PreviewCard>
         </Grid>
@@ -521,21 +590,25 @@ export default function PreviewPageRoute() {
         id="phase-5"
         phase="Phase 5"
         title="풀 보드 — Board (목 데이터, DnD 활성)"
-        description="Board 컴포넌트 전체. DnD 인터랙션을 목 데이터로 확인합니다."
-        status="pending"
+        description="Board 컴포넌트 전체. BACKLOG 2개·TODO 3개·IN_PROGRESS 1개·DONE 1개. 드래그 시 레이아웃 확인."
+        status="wip"
       >
         <div
           style={{
-            border: '2px dashed #E4E7EC',
+            height: 560,
+            display: 'flex',
+            flexDirection: 'column',
+            overflow: 'hidden',
+            border: '1px solid #E4E7EC',
             borderRadius: 10,
-            padding: '2.5rem',
-            textAlign: 'center',
-            color: '#98A2B3',
-            fontSize: 14,
-            background: '#FAFAFA',
           }}
         >
-          Board 구현 완료 후 여기에 추가됩니다
+          <Board
+            board={BOARD_DATA}
+            onTicketClick={() => {}}
+            onDragEnd={() => {}}
+            activeTicket={null}
+          />
         </div>
       </PhaseSection>
 

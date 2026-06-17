@@ -17,14 +17,12 @@ interface PriorityBadgeProps {
   priority: TicketPriority;
 }
 
-const PRIORITY_VARIANT: Record<TicketPriority, BadgeVariant> = {
-  LOW: 'low',
-  MEDIUM: 'medium',
-  HIGH: 'high',
-};
-
 export function PriorityBadge({ priority }: PriorityBadgeProps) {
-  return <Badge variant={PRIORITY_VARIANT[priority]}>{priority}</Badge>;
+  return (
+    <span className={`badge badge--${priority.toLowerCase()}`} data-priority={priority}>
+      {priority}
+    </span>
+  );
 }
 
 interface DueDateBadgeProps {
