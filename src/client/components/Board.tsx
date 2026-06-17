@@ -1,7 +1,7 @@
 'use client';
 
 import { useId } from 'react';
-import { DndContext, DragOverlay, type DragEndEvent } from '@dnd-kit/core';
+import { DndContext, DragOverlay, type DragStartEvent, type DragEndEvent } from '@dnd-kit/core';
 import type { BoardData, TicketWithMeta } from '@/shared/types';
 import { Column } from './Column';
 import { TicketCard } from './TicketCard';
@@ -9,14 +9,15 @@ import { TicketCard } from './TicketCard';
 interface BoardProps {
   board: BoardData;
   onTicketClick: (ticket: TicketWithMeta) => void;
+  onDragStart?: (event: DragStartEvent) => void;
   onDragEnd: (event: DragEndEvent) => void;
   activeTicket: TicketWithMeta | null;
 }
 
-export function Board({ board, onTicketClick, onDragEnd, activeTicket }: BoardProps) {
+export function Board({ board, onTicketClick, onDragStart, onDragEnd, activeTicket }: BoardProps) {
   const dndId = useId();
   return (
-    <DndContext id={dndId} onDragEnd={onDragEnd}>
+    <DndContext id={dndId} onDragStart={onDragStart} onDragEnd={onDragEnd}>
       <div className="board-body">
         <div className="board-sidebar">
           <Column status="BACKLOG" tickets={board.BACKLOG} onTicketClick={onTicketClick} />

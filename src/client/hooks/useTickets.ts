@@ -1,11 +1,13 @@
 import { useState, useEffect, useCallback } from 'react';
 import * as ticketApi from '../api/ticketApi';
+import { COLUMN_ORDER } from '@/shared/types';
 import type {
   BoardData,
   CreateTicketInput,
   UpdateTicketInput,
   ReorderTicketInput,
   TicketStatus,
+  TicketWithMeta,
 } from '@/shared/types';
 
 export interface UseTicketsOptions {
@@ -21,6 +23,37 @@ export interface UseTicketsResult {
   remove: (id: number) => Promise<void>;
   reorder: (input: ReorderTicketInput) => Promise<void>;
   complete: (id: number, input: { status: TicketStatus; position: number }) => Promise<void>;
+}
+
+function applyMove(
+  board: BoardData,
+  ticketId: number,
+  newStatus: TicketStatus,
+  newPosition: number,
+): BoardData {
+  let moved: TicketWithMeta | undefined;
+
+  const stripped = COLUMN_ORDER.reduce(
+    (acc, status) => {
+      const col = board[status];
+      const idx = col.findIndex((t) => t.id === ticketId);
+      if (idx !== -1) {
+        moved = col[idx];
+        acc[status] = col.filter((t) => t.id !== ticketId);
+      } else {
+        acc[status] = col;
+      }
+      return acc;
+    },
+    {} as BoardData,
+  );
+
+  if (!moved) return board;
+
+  const updated: TicketWithMeta = { ...moved, status: newStatus, position: newPosition };
+  const targetCol = [...stripped[newStatus], updated].sort((a, b) => a.position - b.position);
+
+  return { ...stripped, [newStatus]: targetCol };
 }
 
 export function useTickets({ initialData }: UseTicketsOptions): UseTicketsResult {
@@ -67,17 +100,31 @@ export function useTickets({ initialData }: UseTicketsOptions): UseTicketsResult
       await refreshBoard();
     });
 
-  const reorder = (input: ReorderTicketInput) =>
-    withLoading(async () => {
+  const reorder = async (input: ReorderTicketInput) => {
+    if (!board) return;
+    const backup = board;
+    setBoard(applyMove(board, input.ticketId, input.status, input.position));
+    try {
       await ticketApi.reorder(input);
       await refreshBoard();
-    });
+    } catch (e) {
+      setBoard(backup);
+      setError(e instanceof Error ? e.message : String(e));
+    }
+  };
 
-  const complete = (id: number, input: { status: TicketStatus; position: number }) =>
-    withLoading(async () => {
+  const complete = async (id: number, input: { status: TicketStatus; position: number }) => {
+    if (!board) return;
+    const backup = board;
+    setBoard(applyMove(board, id, input.status, input.position));
+    try {
       await ticketApi.complete(id, input);
       await refreshBoard();
-    });
+    } catch (e) {
+      setBoard(backup);
+      setError(e instanceof Error ? e.message : String(e));
+    }
+  };
 
   return { board, isLoading, error, create, update, remove, reorder, complete };
 }

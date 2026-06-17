@@ -229,6 +229,15 @@ describe('useTickets', () => {
 
       expect(result.current.error).toBe('티켓을 찾을 수 없습니다');
     });
+
+    it('reorder 실패 시 board를 이전 상태로 롤백한다', async () => {
+      mockedApi.reorder.mockRejectedValue(new Error('티켓을 찾을 수 없습니다'));
+
+      const { result } = renderHook(() => useTickets({ initialData: boardWithTicket }));
+      await act(async () => result.current.reorder(input));
+
+      expect(result.current.board).toEqual(boardWithTicket);
+    });
   });
 
   describe('complete', () => {
@@ -267,6 +276,15 @@ describe('useTickets', () => {
       await act(async () => result.current.complete(99, input));
 
       expect(result.current.error).toBe('티켓을 찾을 수 없습니다');
+    });
+
+    it('complete 실패 시 board를 이전 상태로 롤백한다', async () => {
+      mockedApi.complete.mockRejectedValue(new Error('티켓을 찾을 수 없습니다'));
+
+      const { result } = renderHook(() => useTickets({ initialData: boardWithTicket }));
+      await act(async () => result.current.complete(1, input));
+
+      expect(result.current.board).toEqual(boardWithTicket);
     });
   });
 });

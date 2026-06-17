@@ -1,6 +1,18 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { createTicketSchema } from '@/shared/validations/ticketSchema';
-import { createTicket } from '@/server/services/ticketService';
+import { createTicket, getBoard } from '@/server/services/ticketService';
+
+export async function GET() {
+  try {
+    const board = await getBoard();
+    return NextResponse.json(board);
+  } catch {
+    return NextResponse.json(
+      { error: { code: 'INTERNAL_ERROR', message: '서버 오류가 발생했습니다' } },
+      { status: 500 },
+    );
+  }
+}
 
 export async function POST(req: NextRequest) {
   const body: unknown = await req.json();

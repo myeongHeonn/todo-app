@@ -2,6 +2,36 @@ import { z } from 'zod';
 
 const today = () => new Date().toISOString().split('T')[0];
 
+export const updateTicketSchema = z.object({
+  title: z
+    .string()
+    .min(1, '제목을 입력해주세요')
+    .max(200, '제목은 200자 이내로 입력해주세요')
+    .refine((v) => v.trim().length > 0, '제목을 입력해주세요')
+    .optional(),
+  description: z.string().max(1000, '설명은 1000자 이내로 입력해주세요').nullable().optional(),
+  priority: z
+    .enum(['LOW', 'MEDIUM', 'HIGH'], {
+      errorMap: () => ({ message: '우선순위는 LOW, MEDIUM, HIGH 중 선택해주세요' }),
+    })
+    .optional(),
+  plannedStartDate: z.string().regex(/^\d{4}-\d{2}-\d{2}$/).nullable().optional(),
+  dueDate: z.string().regex(/^\d{4}-\d{2}-\d{2}$/).nullable().optional(),
+});
+
+export const reorderTicketSchema = z.object({
+  ticketId: z.number().int().positive(),
+  status: z.enum(['BACKLOG', 'TODO', 'IN_PROGRESS'], {
+    errorMap: () => ({ message: '상태는 BACKLOG, TODO, IN_PROGRESS 중 선택해주세요' }),
+  }),
+  position: z.number().int(),
+});
+
+export const completeTicketSchema = z.object({
+  status: z.enum(['BACKLOG', 'TODO', 'IN_PROGRESS', 'DONE']),
+  position: z.number().int(),
+});
+
 export const createTicketSchema = z.object({
   title: z
     .string({ required_error: '제목을 입력해주세요' })
