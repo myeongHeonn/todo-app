@@ -1,7 +1,16 @@
 'use client';
 
 import { useId } from 'react';
-import { DndContext, DragOverlay, type DragStartEvent, type DragEndEvent } from '@dnd-kit/core';
+import {
+  DndContext,
+  DragOverlay,
+  MouseSensor,
+  TouchSensor,
+  useSensor,
+  useSensors,
+  type DragStartEvent,
+  type DragEndEvent,
+} from '@dnd-kit/core';
 import type { BoardData, TicketWithMeta } from '@/shared/types';
 import { Column } from './Column';
 import { TicketCard } from './TicketCard';
@@ -31,8 +40,13 @@ export function Board({
   onFilterChange = () => {},
 }: BoardProps) {
   const dndId = useId();
+  const sensors = useSensors(
+    useSensor(MouseSensor, { activationConstraint: { distance: 5 } }),
+    useSensor(TouchSensor, { activationConstraint: { delay: 200, tolerance: 5 } }),
+  );
+
   return (
-    <DndContext id={dndId} onDragStart={onDragStart} onDragEnd={onDragEnd}>
+    <DndContext id={dndId} sensors={sensors} onDragStart={onDragStart} onDragEnd={onDragEnd}>
       <div className="board-body">
         <div className="board-sidebar">
           <Column status="BACKLOG" tickets={board.BACKLOG} onTicketClick={onTicketClick} />

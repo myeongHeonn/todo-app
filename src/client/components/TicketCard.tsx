@@ -28,8 +28,17 @@ export function TicketCard({ ticket, onClick }: TicketCardProps) {
     .filter(Boolean)
     .join(' ');
 
+  const ariaLabel = [
+    `티켓: ${ticket.title}`,
+    `우선순위: ${ticket.priority}`,
+    ticket.dueDate && `마감일: ${ticket.dueDate}`,
+    ticket.isOverdue && '기한 초과',
+  ]
+    .filter(Boolean)
+    .join(', ');
+
   const handleKeyDown = (e: React.KeyboardEvent) => {
-    if (e.key === 'Enter' || e.key === ' ') {
+    if (e.key === 'Enter') {
       e.preventDefault();
       onClick();
     }
@@ -43,7 +52,7 @@ export function TicketCard({ ticket, onClick }: TicketCardProps) {
       {...listeners}
       className={className}
       role="button"
-      aria-label={`티켓: ${ticket.title}`}
+      aria-label={ariaLabel}
       tabIndex={0}
       data-overdue={ticket.isOverdue ? 'true' : undefined}
       onClick={onClick}

@@ -5,6 +5,10 @@ import type { BoardData } from '@/shared/types';
 jest.mock('@dnd-kit/core', () => ({
   DndContext: ({ children }: { children: React.ReactNode }) => <>{children}</>,
   DragOverlay: () => null,
+  MouseSensor: class MouseSensor {},
+  TouchSensor: class TouchSensor {},
+  useSensor: jest.fn(),
+  useSensors: jest.fn(() => []),
 }));
 
 jest.mock('./Column', () => ({
