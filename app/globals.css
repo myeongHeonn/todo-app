@@ -693,6 +693,66 @@ body {
   color: var(--color-danger-text);
 }
 
+.form-label__required {
+  color: var(--color-danger);
+  font-weight: var(--font-bold);
+}
+
+/* Error state — red border + focus ring */
+[aria-invalid="true"].form-input,
+[aria-invalid="true"].form-textarea {
+  border-color: var(--color-danger);
+}
+[aria-invalid="true"].form-input:focus,
+[aria-invalid="true"].form-textarea:focus {
+  border-color: var(--color-danger);
+  box-shadow: 0 0 0 3px rgba(244, 63, 94, 0.15);
+}
+
+/* Priority select wrapper — CSS custom properties collapse 6 rules into 5 */
+.form-priority-wrapper {
+  position: relative;
+  display: flex;
+  align-items: center;
+  --p-dot: transparent;
+  --p-text: inherit;
+}
+
+.form-priority-wrapper[data-priority="LOW"]    { --p-dot: var(--priority-low-border);    --p-text: var(--priority-low); }
+.form-priority-wrapper[data-priority="MEDIUM"] { --p-dot: var(--priority-medium-border); --p-text: var(--priority-medium); }
+.form-priority-wrapper[data-priority="HIGH"]   { --p-dot: var(--priority-high-border);   --p-text: var(--priority-high); }
+
+.form-priority-dot {
+  width: 8px;
+  height: 8px;
+  border-radius: var(--radius-full);
+  flex-shrink: 0;
+  position: absolute;
+  left: 12px;
+  pointer-events: none;
+  z-index: 1;
+  background: var(--p-dot);
+}
+
+.form-priority-wrapper .form-select {
+  padding-left: 28px;
+  color: var(--p-text);
+}
+
+/* Date fields side-by-side */
+.form-date-row {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 12px;
+}
+
+/* TicketForm overall spacing */
+.ticket-form {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
 .form-actions {
   display: flex;
   align-items: center;

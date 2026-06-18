@@ -29,6 +29,14 @@ export const COLUMN_LABELS: Record<TicketStatus, string> = {
   DONE: 'Done',
 };
 
+export const PRIORITY_ORDER: TicketPriority[] = ['LOW', 'MEDIUM', 'HIGH'];
+
+export const PRIORITY_LABELS: Record<TicketPriority, string> = {
+  LOW: '낮음 (Low)',
+  MEDIUM: '보통 (Medium)',
+  HIGH: '높음 (High)',
+};
+
 export interface Ticket {
   id: number;
   title: string;

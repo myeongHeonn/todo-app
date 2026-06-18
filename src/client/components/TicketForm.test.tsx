@@ -107,4 +107,54 @@ describe('TicketForm', () => {
       expect(screen.getByRole('button', { name: '처리중…' })).toBeDisabled();
     });
   });
+
+  describe('C004-CSS-1: 필수 필드 aria-required', () => {
+    it('제목 input에 aria-required="true"가 설정된다', () => {
+      render(<TicketForm {...defaultProps} />);
+      expect(screen.getByLabelText(/제목/)).toHaveAttribute('aria-required', 'true');
+    });
+  });
+
+  describe('C004-CSS-2: 에러 상태 aria-invalid', () => {
+    it('빈 제목으로 제출하면 제목 input에 aria-invalid="true"가 설정된다', async () => {
+      render(<TicketForm {...defaultProps} />);
+      await userEvent.click(screen.getByRole('button', { name: '저장' }));
+      await screen.findByText('제목을 입력해주세요');
+      expect(screen.getByLabelText(/제목/)).toHaveAttribute('aria-invalid', 'true');
+    });
+
+    it('에러가 없으면 aria-invalid가 설정되지 않는다', () => {
+      render(<TicketForm {...defaultProps} />);
+      expect(screen.getByLabelText(/제목/)).not.toHaveAttribute('aria-invalid', 'true');
+    });
+
+    it('과거 종료예정일 제출 시 종료예정일 input에 aria-invalid="true"가 설정된다', async () => {
+      render(<TicketForm {...defaultProps} />);
+      await userEvent.type(screen.getByLabelText(/제목/), '테스트');
+      fireEvent.change(screen.getByLabelText(/종료예정일/), {
+        target: { value: '2020-01-01' },
+      });
+      await userEvent.click(screen.getByRole('button', { name: '저장' }));
+      await screen.findByText('종료예정일은 오늘 이후 날짜를 선택해주세요');
+      expect(screen.getByLabelText(/종료예정일/)).toHaveAttribute('aria-invalid', 'true');
+    });
+  });
+
+  describe('C004-CSS-3: 우선순위 색상 data 속성', () => {
+    it('우선순위 select 부모에 기본값 data-priority="MEDIUM"이 설정된다', () => {
+      render(<TicketForm {...defaultProps} />);
+      const select = screen.getByRole('combobox', { name: /우선순위/ });
+      expect(select.closest('[data-priority]')).toHaveAttribute('data-priority', 'MEDIUM');
+    });
+
+    it('우선순위 변경 시 data-priority가 업데이트된다', async () => {
+      render(<TicketForm {...defaultProps} />);
+      await userEvent.selectOptions(
+        screen.getByRole('combobox', { name: /우선순위/ }),
+        'HIGH',
+      );
+      const select = screen.getByRole('combobox', { name: /우선순위/ });
+      expect(select.closest('[data-priority]')).toHaveAttribute('data-priority', 'HIGH');
+    });
+  });
 });

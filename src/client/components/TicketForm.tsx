@@ -1,7 +1,8 @@
 'use client';
 
-import { useState } from 'react';
+import React, { useState } from 'react';
 import type { Ticket, CreateTicketInput, UpdateTicketInput, TicketPriority } from '@/shared/types';
+import { PRIORITY_LABELS, PRIORITY_ORDER } from '@/shared/types';
 import { createTicketSchema } from '@/shared/validations/ticketSchema';
 import { Button } from './ui/Button';
 
@@ -9,20 +10,55 @@ interface FormFieldProps {
   id: string;
   label: string;
   error?: string;
+  required?: boolean;
   children: React.ReactNode;
 }
 
-function FormField({ id, label, error, children }: FormFieldProps) {
+function FormField({ id, label, error, required, children }: FormFieldProps) {
+  const errorId = `${id}-error`;
+  const child = React.Children.only(children);
+  const enhanced =
+    React.isValidElement<React.HTMLAttributes<HTMLElement>>(child) && typeof child.type === 'string'
+      ? React.cloneElement(child, {
+          ...(required && { 'aria-required': true as const }),
+          ...(error && { 'aria-invalid': true as const, 'aria-describedby': errorId }),
+        })
+      : child;
+
   return (
     <div className="form-field">
       <label className="form-label" htmlFor={id}>
         {label}
+        {required && <span className="form-label__required" aria-hidden="true"> *</span>}
       </label>
-      {children}
-      {error && <span className="form-error">{error}</span>}
+      {enhanced}
+      {error && <span id={errorId} className="form-error">{error}</span>}
     </div>
   );
 }
+
+interface PrioritySelectProps {
+  value: TicketPriority;
+  onChange: React.ChangeEventHandler<HTMLSelectElement>;
+}
+
+function PrioritySelect({ value, onChange }: PrioritySelectProps) {
+  return (
+    <div className="form-priority-wrapper" data-priority={value}>
+      <span className="form-priority-dot" aria-hidden="true" />
+      <select id="priority" name="priority" className="form-select" value={value} onChange={onChange}>
+        {PRIORITY_ORDER.map((p) => (
+          <option key={p} value={p}>{PRIORITY_LABELS[p]}</option>
+        ))}
+      </select>
+    </div>
+  );
+}
+
+const DATE_FIELDS = [
+  { id: 'plannedStartDate', label: '시작예정일' },
+  { id: 'dueDate', label: '종료예정일' },
+] as const;
 
 interface TicketFormProps {
   mode: 'create' | 'edit';
@@ -99,8 +135,8 @@ export function TicketForm({
   }
 
   return (
-    <form onSubmit={handleSubmit}>
-      <FormField id="title" label="제목" error={errors.title}>
+    <form onSubmit={handleSubmit} className="ticket-form" noValidate>
+      <FormField id="title" label="제목" error={errors.title} required>
         <input
           id="title"
           name="title"
@@ -108,6 +144,7 @@ export function TicketForm({
           className="form-input"
           value={values.title}
           onChange={handleChange}
+          placeholder="업무 제목을 입력하세요"
         />
       </FormField>
 
@@ -118,44 +155,28 @@ export function TicketForm({
           className="form-textarea"
           value={values.description}
           onChange={handleChange}
+          placeholder="업무 내용을 간략히 입력하세요 (선택)"
         />
       </FormField>
 
       <FormField id="priority" label="우선순위" error={errors.priority}>
-        <select
-          id="priority"
-          name="priority"
-          className="form-select"
-          value={values.priority}
-          onChange={handleChange}
-        >
-          <option value="LOW">LOW</option>
-          <option value="MEDIUM">MEDIUM</option>
-          <option value="HIGH">HIGH</option>
-        </select>
+        <PrioritySelect value={values.priority} onChange={handleChange} />
       </FormField>
 
-      <FormField id="plannedStartDate" label="시작예정일" error={errors.plannedStartDate}>
-        <input
-          id="plannedStartDate"
-          name="plannedStartDate"
-          type="date"
-          className="form-input"
-          value={values.plannedStartDate}
-          onChange={handleChange}
-        />
-      </FormField>
-
-      <FormField id="dueDate" label="종료예정일" error={errors.dueDate}>
-        <input
-          id="dueDate"
-          name="dueDate"
-          type="date"
-          className="form-input"
-          value={values.dueDate}
-          onChange={handleChange}
-        />
-      </FormField>
+      <div className="form-date-row">
+        {DATE_FIELDS.map(({ id, label }) => (
+          <FormField key={id} id={id} label={label} error={errors[id]}>
+            <input
+              id={id}
+              name={id}
+              type="date"
+              className="form-input"
+              value={values[id]}
+              onChange={handleChange}
+            />
+          </FormField>
+        ))}
+      </div>
 
       <div className="form-actions">
         <Button type="button" variant="secondary" onClick={onCancel}>
