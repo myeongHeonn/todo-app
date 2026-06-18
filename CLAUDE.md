@@ -2,6 +2,18 @@
 
 This file provides guidance to Claude Code (claude.ai/code) when working with code in this repository.
 
+## 브랜치 전략
+
+```
+main       — 프로덕션. develop에서 PR로만 반영
+develop    — 통합 브랜치. feature/* PR을 머지한 뒤 검증 후 main에 반영
+feature/*  — 기능 개발 단위. develop에서 분기, 완료 후 develop으로 PR
+```
+
+- 새 기능 개발 시 `git checkout -b feature/기능명 develop`으로 시작
+- feature → develop PR 머지 후 로컬에서 동작 확인
+- 확인 완료 시 develop → main 머지
+
 ## 프로젝트 개요
 Tika는 티켓 기반 칸반 보드 TODO 앱이다.
 Next.js App Router 기반으로, 프론트엔드와 백엔드를 디렉토리 수준에서 분리한다.
